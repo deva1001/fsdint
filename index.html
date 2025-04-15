@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+</head>
+<body>
+
+    <div id = "task", style = "display: none;">
+        <center>
+        <h1>Task Page</h1>
+        <br>
+        <button onclick = "create()">Create Task</button>
+        <br>
+        <button onclick = "update()">Update Task</button>
+        <br>
+        <button onclick = "del()">Delete Task</button>
+        <br>
+        <button onclick = "view()">View Tasks</button>
+        <br>
+        </center>
+    </div>
+
+    <div id = "create" style="display: none;">
+        <center>
+        <input type="text" id="create_id" placeholder="Enter Task ID" />
+        <br>
+        <input type = "text",  id = "create_title", placeholder="Enter Title" />
+        <br>
+        <input type = "text",  id = "create_desc", placeholder="Enter Description" />
+        <br>
+        <select id = "create_status">
+            <option value = "pending">Pending</option>
+            <option value="in-progress">In Progress</option>
+            <option value="completed">Completed</option>
+        </select>
+        <br>
+        <input type = "date", id ="create_date" />
+        <br>
+        <button onclick = "createTask()">Create</button></center>
+
+    </div>
+
+    <div id = "update" style="display: none;">
+        <center>
+        <input type = "text",  id = "update_id", placeholder="Enter ID to be updated" />
+        <br>
+        <input type = "text",  id = "update_title", placeholder="Enter Title" />
+        <br>
+        <input type = "text",  id = "update_desc", placeholder="Enter Description" />
+        <br>
+        <select id = "update_status">
+            <option value = "pending">Pending</option>
+            <option value="in-progress">In Progress</option>
+            <option value="completed">Completed</option>
+        </select>
+        <br>
+        <input type = "date", id ="update_date" />
+        <br>
+        <button onclick = "updateTask()">Update</button></center>
+
+    </div>
+
+    <div id = "del", style="display: none;">
+        <center>
+            <input type = "text",  id = "del_id", placeholder="Enter ID to be Deleted" />
+            <br>
+            <button onclick = "deleteTask()">Delete</button>
+        </center>
+    </div>
+
+    <div id = "view", style="display: none;">
+        <center>
+            <ul id="taskList"></ul>
+        </center>
+    </div>
+
+    <div id = "login", style="display: block;">
+        <center><h1>Login Page</h1></center>
+        <br>
+        <center><input type = "text", placeholder="Enter Email Address", id = "login_email" /></center>
+        <br>
+        <center><input type = "text", placeholder="Enter Password", id ="login_password" /></center>
+        <br>
+        <center><button onClick = "login()">Login</button></center>
+        <br>
+        <center><button onClick = "registerPage()">New User</button></center>
+    </div>
+
+
+    <div id = "register", style="display: none;">
+        <center><h1>Registration Page</h1></center>
+        <br>
+        <center><input type = "text", placeholder="Enter Name", id = "register_name" /></center>
+        <br>
+        <center><input type = "text", placeholder="Enter Email Address", id = "register_email" /></center>
+        <br>
+        <center><input type = "text", placeholder="Enter Password", id ="register_password" /></center>
+        <br>
+        <center><button onClick = "register()">Register</button></center>
+        <br>
+        <center><button onClick = "loginPage()">Already Registered</button></center>
+    </div>
+
+    
+
+<script>
+    async function login(){
+        var email = document.getElementById("login_email").value
+        var password = document.getElementById("login_password").value
+
+        const res = await fetch("/api/login", {
+            method: "POST",
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({email, password})
+        });
+
+        const data = await res.json();
+        alert(data.message);
+        document.getElementById("login").style.display = "none";
+        document.getElementById("task").style.display = "block";
+    }
+
+    function registerPage(){
+        document.getElementById("login").style.display = "none";
+        document.getElementById("register").style.display = "block";
+    }
+    function loginPage(){
+        document.getElementById("register").style.display = "none";
+        document.getElementById("login").style.display = "block";
+    }
+    async function register(){
+        var name = document.getElementById("register_name").value
+        var email = document.getElementById("register_email").value
+        var password = document.getElementById("register_password").value
+        const res = await fetch("/api/register", {
+            method: "POST",
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({name, email, password})
+        });
+        const data = await res.json();
+        alert(data.message);
+    }
+    function create(){
+        document.getElementById("create").style.display = "block";
+        document.getElementById("update").style.display = "none";
+        document.getElementById("del").style.display = "none";
+        document.getElementById("view").style.display = "none";
+    }
+    function update(){
+        document.getElementById("create").style.display = "none";
+        document.getElementById("update").style.display = "block";
+        document.getElementById("del").style.display = "none";
+        document.getElementById("view").style.display = "none";
+    }
+
+    function del(){
+        document.getElementById("create").style.display = "none";
+        document.getElementById("update").style.display = "none";
+        document.getElementById("del").style.display = "block";
+        document.getElementById("view").style.display = "none";
+    }
+
+    async function view(){
+        document.getElementById("create").style.display = "none";
+        document.getElementById("update").style.display = "none";
+        document.getElementById("del").style.display = "none";
+        document.getElementById("view").style.display = "block";
+        const res = await fetch('/api/tasks', {
+                method: 'GET',
+                credentials: 'include' // important if using httpOnly cookies!
+            });
+            const tasks = await res.json();
+
+            const taskList = document.getElementById('taskList');
+            taskList.innerHTML = ''; // clear old tasks
+
+            tasks.forEach(task => {
+                const li = document.createElement('li');
+                li.textContent = `${task.title} - ${task.status} - ${task.dueDate}`;
+                taskList.appendChild(li);
+            });
+        
+    }
+
+    async function createTask() {
+    var _id = document.getElementById("create_id").value;
+    var title = document.getElementById("create_title").value;
+    var description = document.getElementById("create_desc").value;
+    var dueDate = document.getElementById("create_date").value;
+    var status = document.getElementById("create_status").value;
+
+    const res = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ _id, title, description, status, dueDate })
+    });
+
+    const data = await res.json();
+    alert(data.message);
+    }
+    async function updateTask(){
+        var title = document.getElementById("update_title").value;
+        var description = document.getElementById("update_desc").value;
+        var dueDate = document.getElementById("update_date").value;
+        var status = document.getElementById("update_status").value;
+        const url = "api/tasks/"+document.getElementById("update_id").value;
+        const res = await fetch(url, {
+            method: "PUT",
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({title, description, status, dueDate})
+        });
+        const data = await res.json();
+        alert(data.message);
+    }
+
+    async function deleteTask() {
+        const url = "api/tasks/" + document.getElementById("del_id").value;
+        const res = await fetch(url, {
+            method: "DELETE",
+        });
+        const data = await res.json();
+        alert(data.message);
+    }
+
+</script>
+</body>
+</html>
